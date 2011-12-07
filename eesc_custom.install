@@ -1,0 +1,82 @@
+<?php
+// $Id: eesc_custom.install
+
+/**
+* Implementation of hook_install()
+*/
+function eesc_custom_install() {
+  
+  $q = 'SELECT *
+  FROM   (SELECT DISTINCT r.vid,
+                          r.nid                            AS `node_id`,
+                          r.title,
+                          r.body,
+                          From_unixtime(a.publish_date)    AS `publish_date`,
+                          From_unixtime(a.expiration_date) AS `expiration_date`,
+                          n.status,
+                          n.nid,
+                          n.uid,
+                          n.created,
+                          n.changed,
+                          n.promote,
+                          n.sticky,
+                          a.vid                            AS `node_vid`,
+                          cta.`field_teaser_format`        AS teaserformat,
+                          cta.`field_teaser_value`         AS teaservalue,
+                          u.`name`
+          FROM   node_revisions AS r
+                 JOIN announcement AS a
+                   ON a.nid = r.nid
+                 JOIN node AS n
+                   ON n.nid = r.nid
+                 JOIN content_type_announcement AS cta
+                   ON cta.vid = r.vid
+                 JOIN users AS u
+                   ON u.uid = n.uid
+          ORDER  BY a.vid DESC,
+                    a.publish_date DESC) AS `tmp`
+  GROUP  BY `node_id`
+  ORDER  BY `publish_date` DESC';
+
+  $resource = db_query($q);
+  // loop through the resource and fetch the rows
+  $results = array();
+  while ($row = db_fetch_array($resource)) $results[] = $row; 
+
+  foreach ($results as $row) {
+
+    $node = (object) NULL;
+    $node->type = 'site_announcement';
+    $node->title = $row['title'];
+    $node->field_site_announcement_date[0]['value'] = $row['publish_date'];
+    $node->field_site_announcement_date[0]['value2'] = $row['expiration_date'];
+    $node->field_site_announcement_teaser[0]['value'] = $row['teaservalue'];
+    $node->body = $row['body'];
+    $node->status = $row['status'];
+    $node->promote = $row['promote'];
+    $node->sticky = $row['sticky'];
+    $node->uid = $row['uid'];
+    $node->name = $row['name'];
+    $node->created = $row['created'];
+    $node->changed = $row['changed'];
+    node_submit($node);
+    node_save($node);
+    watchdog('eesc', 'CWS Announcement migrated: %title .', array('%title' => $node->title), WATCHDOG_INFO);
+  }
+
+  drupal_set_message('CWS Announcements migrated to site announcement, see log files for details');
+  
+  // un-publish all cws announcements
+  db_query("UPDATE node SET `status` = 0 WHERE `type` = 'announcement'");
+  
+   drupal_set_message('All CWS Announcements have been un-published');
+
+}
+
+/**
+* Implementation of hook_uninstall()
+*/
+function eesc_custom_uninstall() {
+  // Remove the module from the system table
+  db_query("DELETE FROM {system} WHERE `name` = 'eesc_custom'");
+}

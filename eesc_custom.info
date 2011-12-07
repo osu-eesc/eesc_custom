@@ -1,0 +1,9 @@
+; $Id: eesc_custom.info
+name = EESC Custom
+description = Used for migrating to new Extension theme/settings.
+package = Extension
+core = 6.x
+version = "6.x-1.0"
+core = "6.x"
+project = "EESC Custom"
+
