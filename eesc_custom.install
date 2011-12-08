@@ -24,14 +24,14 @@ function eesc_custom_install() {
                           cta.`field_teaser_format`        AS teaserformat,
                           cta.`field_teaser_value`         AS teaservalue,
                           u.`name`
-          FROM   node_revisions AS r
-                 JOIN announcement AS a
+          FROM   {node_revisions} AS r
+                 JOIN {announcement} AS a
                    ON a.nid = r.nid
-                 JOIN node AS n
+                 JOIN {node} AS n
                    ON n.nid = r.nid
-                 JOIN content_type_announcement AS cta
+                 JOIN {content_type_announcement} AS cta
                    ON cta.vid = r.vid
-                 JOIN users AS u
+                 JOIN {users} AS u
                    ON u.uid = n.uid
           ORDER  BY a.vid DESC,
                     a.publish_date DESC) AS `tmp`
@@ -67,10 +67,58 @@ function eesc_custom_install() {
   drupal_set_message('CWS Announcements migrated to site announcement, see log files for details');
   
   // un-publish all cws announcements
-  db_query("UPDATE node SET `status` = 0 WHERE `type` = 'announcement'");
+  db_query("UPDATE {node} SET `status` = 0 WHERE `type` = 'announcement'");
   
-   drupal_set_message('All CWS Announcements have been un-published');
+  drupal_set_message('All CWS Announcements have been un-published');
+  
+  // Install new modules.
+  $modules[] = 'osu_search';
+  $modules[] = 'linkit';
+  $modules[] = 'linkit_node';
+  $modules[] = 'linkit_views';
+  $modules[] = 'better_formats';
+  $modules[] = 'diff';
+  $modules[] = 'image_resize_filter';
+  $modules[] = 'imce_mkdir';
+  $modules[] = 'googleanalytics';
+  $modules[] = 'addtoany';
+  $modules[] = 'media_vimeo';
+  $modules[] = 'media_youtube';
+    
+  foreach ($modules as $module) {
+    $module_name = $files[$module]->info['name'];
+    if (!module_exists($module)) {
+      drupal_install_modules(array($module));
+      drupal_set_message('Installed ' . $module .  ' module');
+    }
+  }
 
+  // set variables for osu_search 
+  variable_set('osu_search_other_results_page', '1');
+  variable_set('osu_search_collection_title', 'All Extension & Ag Experiment Station websites');  
+  variable_set('osu_search_collection_id', 'Extension');
+  variable_set('osu_search_collection_as_primary', '1');
+  variable_set('osu_search_hide_osu', '1');
+
+  drupal_set_message('OSU Search module configured');
+  
+  // update wysiwyg profiles
+  $w_settings = 'a:20:{s:7:"default";i:0;s:11:"user_choose";i:1;s:11:"show_toggle";i:1;s:5:"theme";s:8:"advanced";s:8:"language";s:2:"en";s:7:"buttons";a:11:{s:7:"default";a:26:{s:4:"bold";i:1;s:6:"italic";i:1;s:11:"justifyleft";i:1;s:13:"justifycenter";i:1;s:12:"justifyright";i:1;s:7:"bullist";i:1;s:7:"numlist";i:1;s:7:"outdent";i:1;s:6:"indent";i:1;s:4:"undo";i:1;s:4:"redo";i:1;s:4:"link";i:1;s:6:"unlink";i:1;s:6:"anchor";i:1;s:5:"image";i:1;s:7:"cleanup";i:1;s:3:"sup";i:1;s:3:"sub";i:1;s:4:"code";i:1;s:2:"hr";i:1;s:3:"cut";i:1;s:4:"copy";i:1;s:5:"paste";i:1;s:9:"visualaid";i:1;s:12:"removeformat";i:1;s:7:"charmap";i:1;}s:8:"advimage";a:1:{s:8:"advimage";i:1;}s:7:"advlink";a:1:{s:7:"advlink";i:1;}s:4:"font";a:2:{s:12:"formatselect";i:1;s:11:"styleselect";i:1;}s:5:"paste";a:2:{s:9:"pastetext";i:1;s:9:"pasteword";i:1;}s:13:"searchreplace";a:1:{s:6:"search";i:1;}s:5:"style";a:1:{s:10:"styleprops";i:1;}s:5:"table";a:1:{s:13:"tablecontrols";i:1;}s:5:"media";a:1:{s:5:"media";i:1;}s:4:"imce";a:1:{s:4:"imce";i:1;}s:6:"linkit";a:1:{s:6:"linkit";i:1;}}s:11:"toolbar_loc";s:3:"top";s:13:"toolbar_align";s:4:"left";s:8:"path_loc";s:6:"bottom";s:8:"resizing";i:1;s:11:"verify_html";i:1;s:12:"preformatted";i:1;s:22:"convert_fonts_to_spans";i:1;s:17:"remove_linebreaks";i:1;s:23:"apply_source_formatting";i:1;s:27:"paste_auto_cleanup_on_paste";i:1;s:13:"block_formats";s:32:"p,h2,h3,h4,h5,h6,div,address,pre";s:11:"css_setting";s:5:"theme";s:8:"css_path";s:66:"http://extension.oregonstate.edu/css/drupal/d6-editor-defaults.css";s:11:"css_classes";s:0:"";}';
+  
+  db_query("UPDATE {wysiwyg} SET settings = '%s' WHERE  `editor` = 'tinymce'", $w_settings);
+  
+  drupal_set_message('WYSIWYG profiles updated');
+  
+  // add image_resize_filter to input types
+  $filter_1 = "INSERT INTO {filters}	(format, module) VALUES	(1, 'image_resize_filter')";
+  $filter_2 = "INSERT INTO {filters}	(format, module) VALUES	(2, 'image_resize_filter')";
+  $filter_3 = "INSERT INTO {filters}	(format, module) VALUES	(3, 'image_resize_filter')";
+  
+  db_query($filter_1);
+  db_query($filter_2);
+  db_query($filter_3);  
+  drupal_set_message('Image Resize Filter added to input types');
+  
 }
 
 /**
