@@ -1,9 +1,7 @@
 <?php
-// $Id: eesc_custom.module 
+
 /**
- * EESC Custom
- * Module for adding eXtension Ask an Expert Widget.
- * used for migrating to the new extension theme/config.
- */
-
-
+ * @file
+ * eesc_custom.module
+ * 
+*/
