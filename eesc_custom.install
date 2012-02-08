@@ -92,6 +92,9 @@ function eesc_custom_install() {
   $modules[] = 'skinr';
   $modules[] = 'globalredirect';
   $modules[] = 'extension_print_friendly';
+  $modules[] = 'context';
+  $modules[] = 'context_layouts';
+  $modules[] = 'context_ui';
     
   foreach ($modules as $module) {
     $module_name = $files[$module]->info['name'];
@@ -115,6 +118,20 @@ function eesc_custom_install() {
   variable_set('vertical_tabs_default', 1);
   variable_set('vertical_tabs_node_type_settings', 1);
   variable_set('vertical_tabs_minimum', 0);
+  variable_set('addtoany_display_in_nodecont', 0);
+  variable_set('addtoany_display_in_nodelink', 0);
+  variable_set('addtoany_display_in_teasers', 0);
+  variable_set('addtoany_image', 'custom');
+  variable_set('addtoany_custom_image', 'http://extension.oregonstate.edu/_includes/images/share-save.png');
+  variable_set('admin_theme', 'rubik');
+  
+  // make sure proprocess options are set
+  variable_set('preprocess_css', 1);
+  variable_set('preprocess_js', 1);
+  
+  //write errors to log, don't display on screen
+  variable_set('error_level', 0);
+
   
   // update wysiwyg profiles
   $w_settings = 'a:20:{s:7:"default";i:1;s:11:"user_choose";i:0;s:11:"show_toggle";i:1;s:5:"theme";s:8:"advanced";s:8:"language";s:2:"en";s:7:"buttons";a:8:{s:7:"default";a:22:{s:4:"bold";i:1;s:6:"italic";i:1;s:11:"justifyleft";i:1;s:13:"justifycenter";i:1;s:12:"justifyright";i:1;s:7:"bullist";i:1;s:7:"numlist";i:1;s:7:"outdent";i:1;s:6:"indent";i:1;s:4:"undo";i:1;s:4:"redo";i:1;s:4:"link";i:1;s:6:"unlink";i:1;s:6:"anchor";i:1;s:3:"sup";i:1;s:3:"sub";i:1;s:4:"code";i:1;s:2:"hr";i:1;s:3:"cut";i:1;s:4:"copy";i:1;s:12:"removeformat";i:1;s:7:"charmap";i:1;}s:8:"advimage";a:1:{s:8:"advimage";i:1;}s:7:"advlink";a:1:{s:7:"advlink";i:1;}s:4:"font";a:1:{s:12:"formatselect";i:1;}s:5:"paste";a:2:{s:9:"pastetext";i:1;s:9:"pasteword";i:1;}s:5:"table";a:1:{s:13:"tablecontrols";i:1;}s:4:"imce";a:1:{s:4:"imce";i:1;}s:6:"linkit";a:1:{s:6:"linkit";i:1;}}s:11:"toolbar_loc";s:3:"top";s:13:"toolbar_align";s:4:"left";s:8:"path_loc";s:6:"bottom";s:8:"resizing";i:1;s:11:"verify_html";i:1;s:12:"preformatted";i:1;s:22:"convert_fonts_to_spans";i:1;s:17:"remove_linebreaks";i:1;s:23:"apply_source_formatting";i:1;s:27:"paste_auto_cleanup_on_paste";i:1;s:13:"block_formats";s:32:"p,h2,h3,h4,h5,h6,div,address,pre";s:11:"css_setting";s:4:"none";s:8:"css_path";s:0:"";s:11:"css_classes";s:0:"";}';
@@ -123,13 +140,22 @@ function eesc_custom_install() {
   
   drupal_set_message(check_plain('WYSIWYG profiles updated'));
   
+  //rename old cws roles
+  db_query("UPDATE {role} SET `name` = 'content editor' WHERE `name`= 'author'");
+  db_query("UPDATE {role} SET `name` = 'site manager' WHERE `name`= 'advanced author'");
+
+  //delete advance author role
+  db_query("DELETE FROM {role} WHERE `name`= 'advance author'");
+  
+  drupal_set_message(check_plain('renamed old CWS roles and removed advance author'));
+  
   // remove php format from legacy blocks
   $block_format = '
   UPDATE boxes,
          filter_formats
   SET    boxes.format = 1
   WHERE  boxes.format = filter_formats.format
-     AND ff.name = \'PHP code\'';
+     AND filter_formats.name = \'PHP code\'';
 
   db_query("$block_format");
   
@@ -142,6 +168,16 @@ function eesc_custom_install() {
   db_query($filter_2);
   db_query($filter_3);  
   drupal_set_message(check_plain('Image Resize Filter added to input types'));
+  
+  // update create content menu so only the items we want are displayed
+  $query = "SELECT `a`.`mlid` FROM `menu_links` AS `a`, `menu_links` AS `b` WHERE `b`.`menu_name` = 'navigation' AND `b`.`link_path` = 'node/add' AND `a`.`plid` = `b`.`mlid` AND `a`.`link_title` NOT IN ('Page', 'Social Media Link', 'Gallery', 'Site Announcement')";
+  $result = db_query($query);
+  while ($record = db_fetch_object($result)) {
+    $a = menu_link_load($record->mlid);
+    $a['hidden'] = '1';
+    $a['customized'] = '1';
+    menu_link_save($a);
+  }
   
 }
 
