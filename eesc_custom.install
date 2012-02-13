@@ -86,8 +86,6 @@ function eesc_custom_install() {
   $modules[] = 'imce_mkdir';
   $modules[] = 'googleanalytics';
   $modules[] = 'addtoany';
-  $modules[] = 'media_vimeo';
-  $modules[] = 'media_youtube';
   $modules[] = 'media_mediaspace';
   $modules[] = 'skinr';
   $modules[] = 'globalredirect';
@@ -103,18 +101,35 @@ function eesc_custom_install() {
       drupal_set_message(check_plain('Installed ' . $module .  ' module'));
     }
   }
-
+  
+  /* uninstall modules */
+  $modules_disable[] = 'media_vimeo';
+  $modules_disable[] = 'media_youtube';
+  
+  foreach ($modules_disable as $module_disable) {
+    $module_name = $files[$module_disable]->info['name'];
+    if (!module_exists($module_disable)) {
+      drupal_uninstall_module(array($module_disable));
+      drupal_set_message(check_plain('Uninstalled ' . $module_disable .  ' module'));
+    }
+  }
+  
   // set variables for osu_search 
   variable_set('osu_search_other_results_page', '1');
   variable_set('osu_search_collection_title', 'All Extension & Ag Experiment Station websites');  
   variable_set('osu_search_collection_id', 'Extension');
   variable_set('osu_search_collection_as_primary', '1');
   variable_set('osu_search_hide_osu', '1');
+  variable_set('osu_search_other_title', '');
+  variable_set('osu_search_other_url', '');
 
   drupal_set_message(check_plain('OSU Search module configured'));
   
   // set variable defaults
   variable_set('lightbox2_use_alt_layout', '1');
+  variable_set('lightbox2_page_count_str', '!current of !total');
+  variable_set('lightbox2_image_count_str', '!current of !total');
+  		
   variable_set('vertical_tabs_default', 1);
   variable_set('vertical_tabs_node_type_settings', 1);
   variable_set('vertical_tabs_minimum', 0);
@@ -124,7 +139,8 @@ function eesc_custom_install() {
   variable_set('addtoany_image', 'custom');
   variable_set('addtoany_custom_image', 'http://extension.oregonstate.edu/_includes/images/share-save.png');
   variable_set('admin_theme', 'rubik');
-  
+  variable_set('configurable_timezones', 0);
+
   // make sure proprocess options are set
   variable_set('preprocess_css', 1);
   variable_set('preprocess_js', 1);
@@ -134,7 +150,7 @@ function eesc_custom_install() {
 
   
   // update wysiwyg profiles
-  $w_settings = 'a:20:{s:7:"default";i:1;s:11:"user_choose";i:0;s:11:"show_toggle";i:1;s:5:"theme";s:8:"advanced";s:8:"language";s:2:"en";s:7:"buttons";a:8:{s:7:"default";a:22:{s:4:"bold";i:1;s:6:"italic";i:1;s:11:"justifyleft";i:1;s:13:"justifycenter";i:1;s:12:"justifyright";i:1;s:7:"bullist";i:1;s:7:"numlist";i:1;s:7:"outdent";i:1;s:6:"indent";i:1;s:4:"undo";i:1;s:4:"redo";i:1;s:4:"link";i:1;s:6:"unlink";i:1;s:6:"anchor";i:1;s:3:"sup";i:1;s:3:"sub";i:1;s:4:"code";i:1;s:2:"hr";i:1;s:3:"cut";i:1;s:4:"copy";i:1;s:12:"removeformat";i:1;s:7:"charmap";i:1;}s:8:"advimage";a:1:{s:8:"advimage";i:1;}s:7:"advlink";a:1:{s:7:"advlink";i:1;}s:4:"font";a:1:{s:12:"formatselect";i:1;}s:5:"paste";a:2:{s:9:"pastetext";i:1;s:9:"pasteword";i:1;}s:5:"table";a:1:{s:13:"tablecontrols";i:1;}s:4:"imce";a:1:{s:4:"imce";i:1;}s:6:"linkit";a:1:{s:6:"linkit";i:1;}}s:11:"toolbar_loc";s:3:"top";s:13:"toolbar_align";s:4:"left";s:8:"path_loc";s:6:"bottom";s:8:"resizing";i:1;s:11:"verify_html";i:1;s:12:"preformatted";i:1;s:22:"convert_fonts_to_spans";i:1;s:17:"remove_linebreaks";i:1;s:23:"apply_source_formatting";i:1;s:27:"paste_auto_cleanup_on_paste";i:1;s:13:"block_formats";s:32:"p,h2,h3,h4,h5,h6,div,address,pre";s:11:"css_setting";s:4:"none";s:8:"css_path";s:0:"";s:11:"css_classes";s:0:"";}';
+  $w_settings = 'a:20:{s:7:"default";i:1;s:11:"user_choose";i:0;s:11:"show_toggle";i:1;s:5:"theme";s:8:"advanced";s:8:"language";s:2:"en";s:7:"buttons";a:8:{s:7:"default";a:23:{s:4:"bold";i:1;s:6:"italic";i:1;s:11:"justifyleft";i:1;s:13:"justifycenter";i:1;s:12:"justifyright";i:1;s:7:"bullist";i:1;s:7:"numlist";i:1;s:7:"outdent";i:1;s:6:"indent";i:1;s:4:"undo";i:1;s:4:"redo";i:1;s:4:"link";i:1;s:6:"unlink";i:1;s:6:"anchor";i:1;s:5:"image";i:1;s:3:"sup";i:1;s:3:"sub";i:1;s:4:"code";i:1;s:2:"hr";i:1;s:3:"cut";i:1;s:4:"copy";i:1;s:12:"removeformat";i:1;s:7:"charmap";i:1;}s:8:"advimage";a:1:{s:8:"advimage";i:1;}s:7:"advlink";a:1:{s:7:"advlink";i:1;}s:4:"font";a:1:{s:12:"formatselect";i:1;}s:5:"paste";a:2:{s:9:"pastetext";i:1;s:9:"pasteword";i:1;}s:5:"table";a:1:{s:13:"tablecontrols";i:1;}s:4:"imce";a:1:{s:4:"imce";i:1;}s:6:"linkit";a:1:{s:6:"linkit";i:1;}}s:11:"toolbar_loc";s:3:"top";s:13:"toolbar_align";s:4:"left";s:8:"path_loc";s:6:"bottom";s:8:"resizing";i:1;s:11:"verify_html";i:1;s:12:"preformatted";i:1;s:22:"convert_fonts_to_spans";i:1;s:17:"remove_linebreaks";i:1;s:23:"apply_source_formatting";i:1;s:27:"paste_auto_cleanup_on_paste";i:1;s:13:"block_formats";s:32:"p,h2,h3,h4,h5,h6,div,address,pre";s:11:"css_setting";s:4:"none";s:8:"css_path";s:0:"";s:11:"css_classes";s:0:"";}';
   
   db_query("UPDATE {wysiwyg} SET settings = '%s' WHERE  `editor` = 'tinymce'", $w_settings);
   
@@ -178,6 +194,10 @@ function eesc_custom_install() {
     $a['customized'] = '1';
     menu_link_save($a);
   }
+  
+  // disable menu items
+  db_query("UPDATE menu_links SET hidden = 1 WHERE menu_name = 'navigation' AND router_path = 'sitemap'");
+  db_query("UPDATE menu_links SET hidden = 1 WHERE menu_name = 'navigation' AND link_path LIKE  'http://calendar.oregonstate.edu%'");
   
 }
 
