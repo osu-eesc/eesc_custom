@@ -103,15 +103,13 @@ function eesc_custom_install() {
   }
   
   /* uninstall modules */
-  $modules_disable[] = 'media_vimeo';
-  $modules_disable[] = 'media_youtube';
+  $modules_dis[] = 'media_vimeo';
+  $modules_dis[] = 'media_youtube';
   
-  foreach ($modules_disable as $module_disable) {
+  foreach ($modules_dis as $module_disable) {
     $module_name = $files[$module_disable]->info['name'];
-    if (!module_exists($module_disable)) {
-      drupal_uninstall_module(array($module_disable));
-      drupal_set_message(check_plain('Uninstalled ' . $module_disable .  ' module'));
-    }
+    module_disable(array($module_disable));
+    drupal_set_message(check_plain('Uninstalled ' . $module_disable .  ' module'));
   }
   
   // set variables for osu_search 
